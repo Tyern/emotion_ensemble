@@ -10,6 +10,7 @@ from tqdm.auto import tqdm
 import time
 import copy
 import warnings
+import sys
 
 from preprocessing import load_data
 from model import *
@@ -120,6 +121,7 @@ def train_model(data_loaders, image_datasets, class_names, model, criterion, opt
 
     # load best model weights
     model.load_state_dict(best_model_wts)
+    # model.load_state_dict(torch.load(sys.argv[1]))
 
     # save model
     torch.save(model.state_dict(), f'{num_epochs:03}ep_acc{best_acc:.2f}.pth')
@@ -139,14 +141,14 @@ def train_model(data_loaders, image_datasets, class_names, model, criterion, opt
             y_pred = torch.softmax(y_logit, dim=1).argmax(dim=1)
             # Put predictions on CPU for evaluation
             y_preds.append(y_pred.cpu())
-            y_true.append(labels)
+            y_true.extend(labels.tolist())
         # Concatenate list of predictions into a tensor
         y_pred_tensor = torch.cat(y_preds)
 
     save_confusion_matrix(
         class_names=all_labels, 
         y_pred_tensor=y_pred_tensor,
-        y_true_tensor=y_true
+        y_true_tensor=torch.tensor(y_true)
     )
 
     return model
