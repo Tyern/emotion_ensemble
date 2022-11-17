@@ -144,7 +144,7 @@ def train_model(data_loaders, image_datasets, class_names, model, criterion, opt
     save_confusion_matrix(
         class_names=all_labels, 
         y_pred_tensor=y_pred_tensor,
-        target=image_datasets.targets
+        test_dataset=image_datasets['val']
     )
 
     return model
