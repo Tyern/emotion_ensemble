@@ -5,21 +5,25 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.optim import lr_scheduler
+from tqdm.auto import tqdm
+
 import time
 import copy
 import warnings
-import pickle
-import matplotlib.pyplot as plt
+
 from preprocessing import load_data
 from model import *
+from utils import plot_training_process, save_confusion_matrix
 
 warnings.filterwarnings("ignore", category=UserWarning)
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+all_labels = ["anger", "disgust", "fear", "joy", "sadness", "surprise", "neutral"]
+
 
 def fine_tuning():
-    data_loaders, dataset_sizes, class_names = load_data("../data", 32, 16, (224, 224), image_type="jpg")
-    print(dataset_sizes)
+    data_loaders, image_datasets, class_names = load_data("../data", 32, 16, (224, 224), image_type="jpg")
+    
 
     model_ft = create_model(len(class_names), activation=nn.Softmax(dim=1), reset_parameters=False, freeze_pretrained=True)
     model_ft = model_ft.to(device)
@@ -33,12 +37,14 @@ def fine_tuning():
     # Decay LR by a factor of 0.1 every 10 epochs
     # exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=10, gamma=0.1)
     # exp_lr_scheduler = lr_scheduler.ExponentialLR(optimizer_ft, gamma=0.95)
-    model_ft = train_model(data_loaders, dataset_sizes, class_names, model_ft, criterion, optimizer_ft,
+    model_ft = train_model(data_loaders, image_datasets, class_names, model_ft, criterion, optimizer_ft,
                            num_epochs=3)
     return model_ft
 
 
-def train_model(data_loaders, dataset_sizes, class_names, model, criterion, optimizer, scheduler=None, num_epochs=25):
+def train_model(data_loaders, image_datasets, class_names, model, criterion, optimizer, scheduler=None, num_epochs=25):
+    dataset_sizes = {x: len(image_datasets[x])
+                         for x in ['train', 'val']}
     since = time.time()
 
     best_model_wts = copy.deepcopy(model.state_dict())
@@ -121,26 +127,27 @@ def train_model(data_loaders, dataset_sizes, class_names, model, criterion, opti
     # plot training process
     plot_training_process(train_acc, val_acc, train_loss, val_loss)
 
+    y_preds = []
+    with torch.inference_mode():
+        for inputs, labels in tqdm(data_loaders["val"], desc="Making predictions"):
+            # Send data and targets to target device
+            inputs, labels = inputs.to(device), labels.to(device)
+            # Do the forward pass
+            y_logit = model(inputs)
+            # Turn predictions from logits -> prediction probabilities -> predictions labels
+            y_pred = torch.softmax(y_logit, dim=1).argmax(dim=1)
+            # Put predictions on CPU for evaluation
+            y_preds.append(y_pred.cpu())
+        # Concatenate list of predictions into a tensor
+        y_pred_tensor = torch.cat(y_preds)
+
+    save_confusion_matrix(
+        class_names=all_labels, 
+        y_pred_tensor=y_pred_tensor,
+        target=image_datasets.targets
+    )
+
     return model
-
-
-def plot_training_process(acc, val_acc, loss, val_loss, save_path="./"):
-    epochs = range(len(acc))
-
-    plt.clf()
-    plt.plot(epochs, acc, 'b', label='Training score', color="blue")
-    plt.plot(epochs, val_acc, 'b', label='Validation score', color="orange")
-    plt.title('Training and validation f1 score')
-    plt.legend()
-    plt.savefig(os.path.join(save_path, "acc.jpg"))
-
-    plt.figure()
-
-    plt.plot(epochs, loss, 'b', label='Training loss', color="blue")
-    plt.plot(epochs, val_loss, 'b', label='Validation loss', color="orange")
-    plt.title('Training and validation loss')
-    plt.legend()
-    plt.savefig(os.path.join(save_path, "loss.jpg"))
 
 
 if __name__ == '__main__':
