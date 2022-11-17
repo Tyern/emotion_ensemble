@@ -34,7 +34,7 @@ def fine_tuning():
     # exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=10, gamma=0.1)
     # exp_lr_scheduler = lr_scheduler.ExponentialLR(optimizer_ft, gamma=0.95)
     model_ft = train_model(data_loaders, dataset_sizes, class_names, model_ft, criterion, optimizer_ft,
-                           num_epochs=100)
+                           num_epochs=3)
     return model_ft
 
 
@@ -117,10 +117,6 @@ def train_model(data_loaders, dataset_sizes, class_names, model, criterion, opti
 
     # save model
     torch.save(model.state_dict(), f'{num_epochs:03}ep_acc{best_acc:.2f}.pth')
-
-    # save class_name
-    with open("class_name.pkl", "wb") as f:
-        pickle.dump(class_names, f)
 
     # plot training process
     plot_training_process(train_acc, val_acc, train_loss, val_loss)

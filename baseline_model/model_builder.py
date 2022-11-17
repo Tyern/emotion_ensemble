@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+import torchvision
 
 
 def create_efficient_net(
