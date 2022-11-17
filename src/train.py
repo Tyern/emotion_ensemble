@@ -128,6 +128,7 @@ def train_model(data_loaders, image_datasets, class_names, model, criterion, opt
     plot_training_process(train_acc, val_acc, train_loss, val_loss)
 
     y_preds = []
+    y_true = []
     with torch.inference_mode():
         for inputs, labels in tqdm(data_loaders["val"], desc="Making predictions"):
             # Send data and targets to target device
@@ -138,13 +139,14 @@ def train_model(data_loaders, image_datasets, class_names, model, criterion, opt
             y_pred = torch.softmax(y_logit, dim=1).argmax(dim=1)
             # Put predictions on CPU for evaluation
             y_preds.append(y_pred.cpu())
+            y_true.append(labels)
         # Concatenate list of predictions into a tensor
         y_pred_tensor = torch.cat(y_preds)
 
     save_confusion_matrix(
         class_names=all_labels, 
         y_pred_tensor=y_pred_tensor,
-        test_dataset=image_datasets['val']
+        y_true_tensor=y_true
     )
 
     return model

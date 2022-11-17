@@ -22,11 +22,11 @@ def plot_training_process(acc, val_acc, loss, val_loss, save_path="./"):
     plt.legend()
     plt.savefig(os.path.join(save_path, "loss.jpg"))
 
-def save_confusion_matrix(class_names, y_pred_tensor, test_dataset):
+def save_confusion_matrix(class_names, y_pred_tensor, y_true_tensor):
     confmat = ConfusionMatrix(num_classes=len(class_names))
     confmat_tensor = confmat(
         preds=y_pred_tensor,
-        target=torch.tensor(test_dataset.targets))
+        target=y_true_tensor)
     fig, ax = plot_confusion_matrix(
         conf_mat=confmat_tensor.numpy(), # matplotlib likes working with NumPy 
         class_names=class_names, # turn the row and column labels into class names
