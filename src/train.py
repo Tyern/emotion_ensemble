@@ -38,7 +38,7 @@ def fine_tuning():
     # exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=10, gamma=0.1)
     # exp_lr_scheduler = lr_scheduler.ExponentialLR(optimizer_ft, gamma=0.95)
     model_ft = train_model(data_loaders, image_datasets, class_names, model_ft, criterion, optimizer_ft,
-                           num_epochs=3)
+                           num_epochs=100)
     return model_ft
 
 

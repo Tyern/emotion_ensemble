@@ -46,7 +46,7 @@ if len(sys.argv) > 2:
     image_num = len(image_path_list)
 
     col = int(image_num**(1/2))
-    row = math.floor(image_num / col)
+    row = math.ceil(image_num / col)
     fig = plt.figure(figsize=(9, 8))
 
     for i in range(image_num):
