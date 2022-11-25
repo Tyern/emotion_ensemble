@@ -34,7 +34,7 @@ test_df = pd.read_csv(test_label_path)
 # get label from csv label column
 for label in range(7):
     train_df, val_df = train_test_split(train_val_df[train_val_df["label"] == label], 
-        shuffle=True, train_size=0.9, random_state=32)
+        shuffle=True, train_size=0.95, random_state=32)
 
     # Copy image to train dataset dir
     for idx, row in train_df.iterrows():
